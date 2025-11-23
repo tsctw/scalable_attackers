@@ -1,37 +1,61 @@
 import requests
 
+from ocr.base64_to_png import base64_to_png
+from ocr.classify import classify_image
+
 def solve_captcha():
     
-    sess = requests.post("http://127.0.0.1:5000/start_session").json()
-    session_id = sess["session_id"]
+    session = requests.post("http://127.0.0.1:5000/start_session").json()
+    session_id = session["session_id"]
+    print(session_id)
 
     captcha1 = requests.get(f"http://localhost:5055/get_challenge?sessionId={session_id}").json()
+    print(captcha1)
 
-    attempt_info = requests.get(
-        f"http://127.0.0.1:5000/get_challenge/1?session_id={session_id}"
-    ).json()
+    # generate png file
+    base64_to_png(captcha1["svgImg"], 'output.png')
 
-    print(attempt_info)
+    target = classify_image("test", "symbols.txt", "output.png")
+
+    print(target)
+
+    # ---------------------------
+    verify_payload = {
+        "answer": target,
+        "challengeId": captcha1["challengeId"],
+    }
+    verify = requests.post(
+        f"http://localhost:5055/verify", json=verify_payload).json()
+    print(verify)
     
-
+    # ---------------------------
     main_verify_payload = {
-        "correct_word": captcha1["word"],
         "session_id": session_id,
+        "user_answer": target,
+        "correct_word": captcha1["randomLetters"],
         "status": "passed",
-        "user_answer": captcha1["word"]
+        "metrics": {
+            "reaction_time_mean_ms": 1922,
+            "solve_time_std_ms": 199776.04999995232,
+            "interkey_interval_std_ms": 1,
+            "path_entropy": 0.5751942410279781,
+            "velocity_std_px_per_s": 303.39539360134313,
+            "click_offset_avg_px": 161.23409208103513,
+            "hover_dwell_avg_ms": 319.68499999841055,
+            "backspace_count": 1,
+            "solve_entropy": 199776.04999995232,
+            "entry_points_unique": 66,
+            "focus_change_events": 2,
+            "swipe_accel_var": 1,
+            "pause_variance_ms": 1,
+            "pressure_std": 1,
+            "fingerprint_entropy": 1,
+            "overall_variance_score": 199776.04999995232
+        }
     }
     
     main_verify_res = requests.post("http://127.0.0.1:5000//verify/1", json=main_verify_payload).json()
     print(main_verify_res)
-
-
-    # captcha1_verify_payload = {
-    #     "challengeId": captcha1["challengeId"],
-    #     "answer": captcha1["word"]
-    # }
-    # res = requests.post("http://localhost:5055/verify", json=captcha1_verify_payload)
-    # print(res)
-
 
 if __name__ == "__main__":
     solve_captcha()

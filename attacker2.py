@@ -7,6 +7,8 @@
 
 import time
 import re
+from ocr.base64_to_png import base64_to_png
+from ocr.classify import classify_image
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -18,7 +20,7 @@ from selenium.common.exceptions import StaleElementReferenceException, ElementCl
 def getFallingWordCaptcha(driver):
     driver.refresh()
     # time.sleep(1) is used here as a pause to wait for the component to update.
-    time.sleep(1)
+    time.sleep(5)
 
     #  Locate start button and click
     startButton = driver.find_element(By.ID, "start-btn")
@@ -28,9 +30,15 @@ def getFallingWordCaptcha(driver):
     
     time.sleep(1)
 
-    # On the Captcha page (don't know which one)
-    elements = driver.find_elements(By.ID, "target-word")
-    return elements
+    image_url = driver.execute_script("""
+        return document.querySelector("canvas").toDataURL();
+    """)
+
+    # generate png file
+    base64_to_png(image_url, 'output.png')
+
+    target = classify_image("test", "symbols.txt", "output.png")
+    return target
 
 # --- CAPTCHA Solving Logic Function ---
 def solve_falling_words_captcha(driver):
@@ -38,17 +46,17 @@ def solve_falling_words_captcha(driver):
 
     try:
         # 1. Wait for CAPTCHA container to load
-        elements = getFallingWordCaptcha(driver)
+        question_text = getFallingWordCaptcha(driver)
         # if it is not falling words captcha, fresh the page until it is
-        while len(elements) == 0:
-            elements = getFallingWordCaptcha(driver)
-        
-        target = elements[0].text
+        while len(question_text) == 0:
+            question_text = getFallingWordCaptcha(driver)
+
+        target = question_text        
         print(f"Target captcha is: {target}")
 
         while len(target) > 0:
             time.sleep(0.1)
-            print("I'm here, first loop")
+            # print("I'm here, first loop")
             letter_elems = driver.find_elements(By.CLASS_NAME, "falling-letter")
 
             letters = []
@@ -89,7 +97,7 @@ def solve_falling_words_captcha(driver):
         print(progress)
         progress_clean = progress.replace(" ", "").replace("_", "")
         print(progress_clean)
-        target = elements[0].text
+        target = question_text
         while len(progress_clean) != len(target):
             time.sleep(1)
             print("I'm here, second loop")
@@ -124,19 +132,7 @@ def start_captcha(driver, url):
     print("Navigating and attempting to solve CAPTCHA...")
     driver.get(url)
 
-    result_elems = driver.find_elements(By.ID, "resolve-btn")
-
-    print(result_elems)
-    # Get result page
-    while len(result_elems) == 0:
-        try:
-            solve_falling_words_captcha(driver)
-            time.sleep(1)
-            result_elems = driver.find_elements(By.ID, "captcha-container")
-            print("Get result")
-            break
-        except Exception as e:
-            print(f"A severe error occurred during the solution attempt: {e}")
+    solve_falling_words_captcha(driver)
 
 # --- Main Program Execution Block ---
 if __name__ == "__main__":

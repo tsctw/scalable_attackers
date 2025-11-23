@@ -1,2 +1,6 @@
 .DS_Store
 venv
+v2
+.vscode
+ocr/train_data
+ocr/val_data
