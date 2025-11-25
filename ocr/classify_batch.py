@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import warnings
 warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -18,7 +20,6 @@ OCR_BASE_PATH = CURRENT_DIR
 # ----------------------------------------------------------
 
 def absolute(path):
-
     # 1. Absolute path → leave unchanged
     if os.path.isabs(path):
         return path
@@ -36,6 +37,7 @@ def decode(characters, y):
     y = np.argmax(np.array(y), axis=2)[:, 0]
     return ''.join([characters[x] for x in y])
 
+
 def load_model(model_name):
     json_file = open(model_name + '.json', 'r')
     loaded_model_json = json_file.read()
@@ -51,13 +53,14 @@ def load_model(model_name):
     )
     return model
 
+
 def classify_image(model_name, symbols_file, image_file):
     """
-    When calling this function, you only need to provide the filename.
-    Example: classify_image("test", "symbols.txt", "output.png")
+    Classify a single image.
+    Example:
+        result = classify_image("test", "symbols.txt", "output.png")
     """
 
-    # add ocr/xxx
     model_name = absolute(model_name)
     symbols_file = absolute(symbols_file)
     image_file = absolute(image_file)
@@ -80,6 +83,58 @@ def classify_image(model_name, symbols_file, image_file):
     pred = model.predict(img)
     return decode(captcha_symbols, pred)
 
+
+def classify_folder(model_name, symbols_file, dest_folder):
+    """
+    Classify all images inside a folder.
+    Example:
+        classify_folder("test", "symbols.txt", "images")
+    """
+
+    model_name = absolute(model_name)
+    symbols_file = absolute(symbols_file)
+    dest_folder = absolute(dest_folder)
+
+    # read symbols
+    with open(symbols_file, 'r') as f:
+        captcha_symbols = f.readline().strip()
+
+    with tf.device('/cpu:0'):
+        model = load_model(model_name)
+
+    files = sorted(os.listdir(dest_folder))
+
+    total = 0
+    correct = 0
+
+    for fname in files:
+        if not fname.lower().endswith((".png", ".jpg", ".jpeg")):
+            continue
+
+        total += 1
+        image_path = os.path.join(dest_folder, fname)
+
+        predicted = classify_image(model_name, symbols_file, image_path)
+        truth = os.path.splitext(fname)[0]
+
+        if predicted == truth:
+            correct += 1
+
+        print(f"{fname} → predicted: {predicted} | truth: {truth}")
+
+    accuracy = correct / total if total > 0 else 0
+
+    print("\n==============================")
+    print(f"Correct: {correct}/{total}")
+    print(f"Accuracy: {accuracy:.4f}")
+    print("==============================\n")
+
+
 if __name__ == '__main__':
-    result = classify_image("test", "symbols.txt", "output.png")
-    print("CAPTCHA Result:", result)
+
+    # Single image example
+    # result = classify_image("test", "symbols.txt", "output.png")
+    # print("CAPTCHA Result:", result)
+
+    # Folder classification example
+    classify_folder("test", "symbols.txt", "test_data5")
