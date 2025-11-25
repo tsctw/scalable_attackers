@@ -4,12 +4,13 @@ from ocr.base64_to_png import base64_to_png
 from ocr.classify import classify_image
 
 def solve_captcha():
+    client = requests.Session()
     
-    session = requests.post("http://127.0.0.1:5000/start_session").json()
+    session = client.post("http://127.0.0.1:5000/start_session").json()
     session_id = session["session_id"]
     print(session_id)
 
-    captcha1 = requests.get(f"http://localhost:5055/get_challenge?sessionId={session_id}").json()
+    captcha1 = client.get(f"http://localhost:5055/get_challenge?sessionId={session_id}").json()
     print(captcha1)
 
     # generate png file
@@ -24,7 +25,7 @@ def solve_captcha():
         "answer": target,
         "challengeId": captcha1["challengeId"],
     }
-    verify = requests.post(
+    verify = client.post(
         f"http://localhost:5055/verify", json=verify_payload).json()
     print(verify)
     
@@ -53,8 +54,20 @@ def solve_captcha():
             "overall_variance_score": 199776.04999995232
         }
     }
+
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        "Accept-Language": "en-US,en;q=0.9",
+        "sec-ch-ua": '"Chromium";v="124", "Not-A.Brand";v="99"',
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": '"macOS"',
+        "sec-fetch-site": "same-origin",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-dest": "empty",
+    }
+
     
-    main_verify_res = requests.post("http://127.0.0.1:5000//verify/1", json=main_verify_payload).json()
+    main_verify_res = client.post("http://127.0.0.1:5000//verify/1", json=main_verify_payload, headers=headers).json()
     print(main_verify_res)
 
 if __name__ == "__main__":

@@ -20,7 +20,7 @@ from selenium.common.exceptions import StaleElementReferenceException, ElementCl
 def getFallingWordCaptcha(driver):
     driver.refresh()
     # time.sleep(1) is used here as a pause to wait for the component to update.
-    time.sleep(5)
+    time.sleep(1)
 
     #  Locate start button and click
     startButton = driver.find_element(By.ID, "start-btn")
@@ -55,18 +55,14 @@ def solve_falling_words_captcha(driver):
         print(f"Target captcha is: {target}")
 
         while len(target) > 0:
-            time.sleep(0.1)
-            # print("I'm here, first loop")
+            time.sleep(0.5)
             letter_elems = driver.find_elements(By.CLASS_NAME, "falling-letter")
 
             letters = []
             for elem in letter_elems:
-                try:
-                    letter = elem.text
-                    top = float(elem.value_of_css_property("top").replace("px", ""))
-                    letters.append((top, letter, elem))
-                except:
-                    continue
+                letter = elem.text
+                top = float(elem.value_of_css_property("top").replace("px", ""))
+                letters.append((top, letter, elem))
 
             if not letters:
                 time.sleep(0.1)
@@ -78,10 +74,9 @@ def solve_falling_words_captcha(driver):
                 if letter == target[0]:
                     print(f"Found {letter} at top={top}, clicking...")
 
-                    target = target[1:]
-
                     try:
                         elem.click()
+                        target = target[1:]
                         progress = driver.find_element(By.ID, "progress")
                         print(f"Progress text: {progress.text}")
                         break
@@ -94,7 +89,6 @@ def solve_falling_words_captcha(driver):
 
         # if progress is not done, fill random characters and verify and go to next round
         progress = driver.find_element(By.ID, "progress").text
-        print(progress)
         progress_clean = progress.replace(" ", "").replace("_", "")
         print(progress_clean)
         target = question_text
