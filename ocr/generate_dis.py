@@ -52,14 +52,14 @@ def generate_captcha(word, output_path):
 
 
 symbols_path = 'symbols.txt'
-DEST = 'test_data5'
+DEST = 'val_data'
 
 with open(symbols_path, 'r') as f:
     SYMBOLS = f.readline().strip()
 
 if __name__ == "__main__":
     os.makedirs(DEST, exist_ok=True)
-    for i in range(1000):
+    for i in range(5000):
         s = "".join(random.choice(SYMBOLS) for _ in range(4))
         generate_captcha(s, f"{DEST}/{s}.png")
     
