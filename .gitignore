@@ -4,6 +4,6 @@ v2
 .vscode
 ocr/train_data
 ocr/val_data
-ocr/test*
+ocr/test_data*
 ocr/train_data_char
 ocr/val_data_char
