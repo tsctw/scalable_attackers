@@ -34,7 +34,7 @@ with open(symbols_path, 'r') as f:
 
 if __name__ == "__main__":
     os.makedirs(DEST, exist_ok=True)
-    for i in range(10000):
+    for i in range(5000):
         uid = str(uuid.uuid4())[0:8]
         ch = random.choice(SYMBOLS)
 

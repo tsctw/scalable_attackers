@@ -39,7 +39,7 @@ def solve_captcha():
     # translate token to letter
     for elem in captcha1['randomLetters']:
         base64_to_png(elem['img'], "char.png", 60, 60)
-        letter = classify_image("test_char", "symbols.txt", "char.png")
+        letter = classify_image("test_char3", "symbols.txt", "char.png")
         print(letter)
         token_map[letter] = elem['token']
 

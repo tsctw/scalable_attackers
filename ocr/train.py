@@ -71,7 +71,7 @@ class SimpleImageSequence(keras.utils.Sequence):
             if not fname.lower().endswith(".png"):
                 continue
             label = fname.split(".")[0].split("_")[0]
-            self.files[label] = fname
+            self.files.setdefault(label, []).append(fname)
 
         self.labels = list(self.files.keys())
         self.count = len(file_list)
@@ -86,7 +86,7 @@ class SimpleImageSequence(keras.utils.Sequence):
 
         for i in range(self.batch_size):
             label = np.random.choice(self.labels)
-            fname = self.files[label]
+            fname = np.random.choice(self.files[label])
 
             img = cv2.imread(os.path.join(self.directory, fname))
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)

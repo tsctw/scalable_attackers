@@ -148,4 +148,4 @@ if __name__ == '__main__':
     # print("CAPTCHA Result:", result)
 
     # Folder classification example
-    classify_folder("test_char", "symbols.txt", "test_data7")
+    classify_folder("test_char3", "symbols.txt", "test_data7")

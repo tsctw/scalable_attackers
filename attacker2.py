@@ -80,7 +80,7 @@ def solve_falling_words_captcha(driver):
                     continue  # reselect element, non-stop
 
                 base64_to_png(img_64, "char.png", 60, 60)
-                letter = classify_image("test_char", "symbols.txt", "char.png")
+                letter = classify_image("test_char3", "symbols.txt", "char.png")
                 print(letter)
                 try:
                     if letter == target[0]:
@@ -89,29 +89,6 @@ def solve_falling_words_captcha(driver):
                         break
                 except:
                     continue 
-
-            # for elem in letter_elems:
-            #     try:
-            #         img_64 = elem.get_attribute("src")
-            #     except StaleElementReferenceException:
-            #         continue  # reselect element, non-stop
-
-            #     base64_to_png(img_64, "char.png", 60, 60)
-            #     letter = classify_image("test_char", "symbols.txt", "char.png")
-            #     print(letter)
-
-            #     # get the latest elem then click
-            #     if letter == target[0]:
-            #         try:
-            #             fresh_elements = driver.find_elements(By.CLASS_NAME, "falling-letter")
-            #             for fresh in fresh_elements:
-            #                 if fresh.get_attribute("src") == img_64:
-            #                     fresh.click()
-            #                     target = target[1:]
-            #                     break
-            #         except:
-            #             continue
-            #         break
         
         time.sleep(1)
         verify_btn = driver.find_element(By.ID, "final-verify-btn")
