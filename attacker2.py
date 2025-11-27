@@ -31,6 +31,12 @@ def getFallingWordCaptcha(driver):
     
     time.sleep(1)
 
+    trueButton = driver.find_element(By.ID, "syco-true")
+    actions.move_to_element(trueButton)
+    trueButton.click()
+
+    time.sleep(1)
+
     img = driver.find_element(By.ID, "captcha-canvas")
     img_64 = img.get_attribute("src")
 
@@ -43,6 +49,7 @@ def getFallingWordCaptcha(driver):
 
 # --- CAPTCHA Solving Logic Function ---
 def solve_falling_words_captcha(driver):
+    actions = ActionChains(driver)
     print("Inside solve falling words")
 
     try:
@@ -58,49 +65,53 @@ def solve_falling_words_captcha(driver):
         while len(target) > 0:
             time.sleep(0.5)
             letter_elems = driver.find_elements(By.CLASS_NAME, "falling-letter")
-
+            
+            # timeout detection
+            retry_button = driver.find_elements(By.ID, "retry-btn")
+            print(f"-----------------letter {4 - len(target) + 1}--------------------")
+            print(f"Target letter: {target[0]}")
+            if len(retry_button) > 0:
+                break
+            
             for elem in letter_elems:
                 try:
                     img_64 = elem.get_attribute("src")
-                except StaleElementReferenceException:
+                except:
                     continue  # reselect element, non-stop
 
                 base64_to_png(img_64, "char.png", 60, 60)
                 letter = classify_image("test_char", "symbols.txt", "char.png")
                 print(letter)
+                try:
+                    if letter == target[0]:
+                        elem.click()
+                        target = target[1:]
+                        break
+                except:
+                    continue 
 
-                # get the latest elem then click
-                if letter == target[0]:
-                    try:
-                        fresh_elements = driver.find_elements(By.CLASS_NAME, "falling-letter")
-                        for fresh in fresh_elements:
-                            if fresh.get_attribute("src") == img_64:
-                                fresh.click()
-                                target = target[1:]
-                                break
-                    except:
-                        continue
-                    break
+            # for elem in letter_elems:
+            #     try:
+            #         img_64 = elem.get_attribute("src")
+            #     except StaleElementReferenceException:
+            #         continue  # reselect element, non-stop
 
+            #     base64_to_png(img_64, "char.png", 60, 60)
+            #     letter = classify_image("test_char", "symbols.txt", "char.png")
+            #     print(letter)
 
-        # if progress is not done, fill random characters and verify and go to next round
-        progress = driver.find_element(By.ID, "progress").text
-        progress_clean = progress.replace(" ", "").replace("_", "")
-        print(progress_clean)
-        target = question_text
-        while len(progress_clean) != len(target):
-            time.sleep(1)
-            print("I'm here, second loop")
-            print(len(progress_clean))
-            progress = driver.find_element(By.ID, "progress").text
-            progress_clean = progress.replace(" ", "").replace("_", "")
-            letter_elems = driver.find_elements(By.CLASS_NAME, "falling-letter")
-            try:
-                letter_elems[0].click()
-            except StaleElementReferenceException:
-                print("Element gone before click. Retrying...")
-            except ElementClickInterceptedException:
-                print("Click blocked by overlay, retrying...")
+            #     # get the latest elem then click
+            #     if letter == target[0]:
+            #         try:
+            #             fresh_elements = driver.find_elements(By.CLASS_NAME, "falling-letter")
+            #             for fresh in fresh_elements:
+            #                 if fresh.get_attribute("src") == img_64:
+            #                     fresh.click()
+            #                     target = target[1:]
+            #                     break
+            #         except:
+            #             continue
+            #         break
         
         time.sleep(1)
         verify_btn = driver.find_element(By.ID, "final-verify-btn")
@@ -113,6 +124,11 @@ def solve_falling_words_captcha(driver):
                 return
         else:
             print("Verify button disabled")
+        
+        retry_button = driver.find_elements(By.ID, "retry-btn")
+        if len(retry_button) > 0:
+            print('End of the Attacker')
+            return
 
         
     except Exception as e:
@@ -128,7 +144,7 @@ def start_captcha(driver, url):
 if __name__ == "__main__":
     
     # *** CHANGE THIS: Replace with your local development server URL ***
-    TARGET_URL = "http://127.0.0.1:5000/"
+    TARGET_URL = "http://127.0.0.1:5001/"
     
     # Initialize WebDriver
     driver = webdriver.Chrome()
