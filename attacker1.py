@@ -1,6 +1,6 @@
 import requests
 
-from metrics import get_payload
+from payload_verify import get_payload
 from ocr.base64_to_png import base64_to_png
 from ocr.classify import classify_image
 
