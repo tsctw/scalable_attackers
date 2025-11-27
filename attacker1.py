@@ -13,23 +13,22 @@ def solve_captcha():
     # print(session_id)
 
     captcha1 = client.get(f"http://localhost:5055/get_challenge?sessionId={session_id}").json()
-    # print(captcha1)
+    print(captcha1)
 
     target_list = []
 
     for elem in captcha1['randomLetters']:
         target_list.append(elem['letter'])
 
-    target_list.sort()
 
     target = ''.join(target_list)
 
     # generate png file
-    # base64_to_png(captcha1["svgImg"], 'output.png')
+    base64_to_png(captcha1["captcha"], 'output.png')
 
-    # target = classify_image("test", "symbols.txt", "output.png")
+    target = classify_image("test", "symbols.txt", "output.png")
 
-    # print(target)
+    print(target)
     
 
     # ---------------------------

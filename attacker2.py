@@ -9,6 +9,7 @@ import time
 import re
 from ocr.base64_to_png import base64_to_png
 from ocr.classify import classify_image
+import uuid
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -30,12 +31,12 @@ def getFallingWordCaptcha(driver):
     
     time.sleep(1)
 
-    image_url = driver.execute_script("""
-        return document.querySelector("canvas").toDataURL();
-    """)
+    img = driver.find_element(By.ID, "captcha-canvas")
+    img_64 = img.get_attribute("src")
+
 
     # generate png file
-    base64_to_png(image_url, 'output.png')
+    base64_to_png(img_64, 'output.png', 260, 80)
 
     target = classify_image("test", "symbols.txt", "output.png")
     return target
@@ -58,34 +59,29 @@ def solve_falling_words_captcha(driver):
             time.sleep(0.5)
             letter_elems = driver.find_elements(By.CLASS_NAME, "falling-letter")
 
-            letters = []
             for elem in letter_elems:
-                letter = elem.text
-                top = float(elem.value_of_css_property("top").replace("px", ""))
-                letters.append((top, letter, elem))
+                try:
+                    img_64 = elem.get_attribute("src")
+                except StaleElementReferenceException:
+                    continue  # reselect element, non-stop
 
-            if not letters:
-                time.sleep(0.1)
-                continue
+                base64_to_png(img_64, "char.png", 60, 60)
+                letter = classify_image("test_char", "symbols.txt", "char.png")
+                print(letter)
 
-            letters.sort(key=lambda x: x[0], reverse=True)
-
-            for top, letter, elem in letters:
+                # get the latest elem then click
                 if letter == target[0]:
-                    print(f"Found {letter} at top={top}, clicking...")
-
                     try:
-                        elem.click()
-                        target = target[1:]
-                        progress = driver.find_element(By.ID, "progress")
-                        print(f"Progress text: {progress.text}")
-                        break
-                    except StaleElementReferenceException:
-                        print("Element gone before click. Retrying...")
-                        break
-                    except ElementClickInterceptedException:
-                        print("Click blocked by overlay, retrying...")
-                        break 
+                        fresh_elements = driver.find_elements(By.CLASS_NAME, "falling-letter")
+                        for fresh in fresh_elements:
+                            if fresh.get_attribute("src") == img_64:
+                                fresh.click()
+                                target = target[1:]
+                                break
+                    except:
+                        continue
+                    break
+
 
         # if progress is not done, fill random characters and verify and go to next round
         progress = driver.find_element(By.ID, "progress").text

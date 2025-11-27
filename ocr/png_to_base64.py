@@ -8,7 +8,7 @@ CHALLENGES = {}
 MAX_WORD_COUNT = 4
 SIZE = 60
 
-def make_letter_tile(letter, color=(0,0,0)):
+def make_letter_tile(letter, color=(0,0,0), Rotate=False):
     img = Image.new("RGBA",(SIZE, SIZE),(255,255,255,0))
 
     # letter interior mask
@@ -33,8 +33,20 @@ def make_letter_tile(letter, color=(0,0,0)):
                     240
                 )
             )
-
+    
+    if Rotate:
+        angle = random.randint(-10, 10)   # Rotate angle (-25° ~ 25°)
+        img = img.rotate(angle, expand=True)
+        img = img.resize((60, 60), Image.Resampling.LANCZOS)
+    
     return img
+
+def make_captcha_char(c):
+    tile = make_letter_tile(c, (0,0,0), False)
+    buf = io.BytesIO()
+    tile.save(buf, format="WEBP")
+    b64 = base64.b64encode(buf.getvalue()).decode()
+    return f"data:image/webp;base64,{b64}"
 
 def make_captcha_media(word, animated=True):
 

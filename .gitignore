@@ -5,3 +5,5 @@ v2
 ocr/train_data
 ocr/val_data
 ocr/test*
+ocr/train_data_char
+ocr/val_data_char

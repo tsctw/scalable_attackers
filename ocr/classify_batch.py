@@ -33,9 +33,20 @@ def absolute(path):
     return os.path.join(OCR_BASE_PATH, path)
 
 
-def decode(characters, y):
-    y = np.argmax(np.array(y), axis=2)[:, 0]
-    return ''.join([characters[x] for x in y])
+def decode(characters, pred):
+    # Case 1: multi-head (list of arrays)
+    if isinstance(pred, list):
+        # pred = [ (1, num_symbols), (1, num_symbols), ... ]
+        out = []
+        for head in pred:
+            idx = np.argmax(head[0])    # get max of head 
+            out.append(characters[idx])
+        return ''.join(out)
+
+    # Case 2: single-head (length = 1)
+    pred = np.array(pred)  # shape (1, num_symbols)
+    idx = np.argmax(pred[0])
+    return characters[idx]
 
 
 def load_model(model_name):
@@ -137,4 +148,4 @@ if __name__ == '__main__':
     # print("CAPTCHA Result:", result)
 
     # Folder classification example
-    classify_folder("test", "symbols.txt", "test_data5")
+    classify_folder("test_char", "symbols.txt", "test_data7")

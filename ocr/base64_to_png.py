@@ -21,7 +21,7 @@ def absolute(path):
     return os.path.join(OCR_BASE_PATH, path)
 # ----------------------------------------------------------
 
-def base64_to_png(b64_str, output_path="output.png", width=150, height=60):
+def base64_to_png(b64_str, output_path="output.png", width=260, height=80):
 
     output_path = absolute(output_path)
 
@@ -45,4 +45,4 @@ def base64_to_png(b64_str, output_path="output.png", width=150, height=60):
 
 # Example usage
 if __name__ == "__main__":
-    base64_to_png(input_file, "output2.png")
+    base64_to_png(input_file, "output2.png", 60, 60)
